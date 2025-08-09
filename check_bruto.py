@@ -35,7 +35,7 @@ class Check:
         if modo.strip().lower() == "check": 
             CelulaValor(ws, 4, "PRODUTOS", linha=2)
             CelulaValor(ws, 4, "=C5-D5+E5", linha=6)
-            CelulaValor(ws, 4, "DESCONTOS", linha=2)
+            CelulaValor(ws, 5, "DESCONTOS", linha=2)
 
         # Dados
         CelulaValor(ws, 1, "NÃO", linha=3)
