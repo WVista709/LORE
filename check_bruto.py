@@ -30,11 +30,12 @@ class Check:
         CelulaValor(ws, 1, "CANCELADAS", linha=2)
         CelulaValor(ws, 2, "SEFAZ", linha=2)
         CelulaValor(ws, 3, "ALTERDATA", linha=2)
-        CelulaValor(ws, 4, "DESCONTOS", linha=2)
+        
 
         if modo.strip().lower() == "check": 
             CelulaValor(ws, 4, "PRODUTOS", linha=2)
             CelulaValor(ws, 4, "=C5-D5+E5", linha=6)
+            CelulaValor(ws, 4, "DESCONTOS", linha=2)
 
         # Dados
         CelulaValor(ws, 1, "NÃO", linha=3)
@@ -84,10 +85,11 @@ class Check:
         CelulaValor(ws, 1, "CANCELADAS", linha=9)
         CelulaValor(ws, 2, "SEFAZ", linha=9)
         CelulaValor(ws, 3, "ALTERDATA", linha=9)
-        CelulaValor(ws, 4, "DESCONTOS", linha=9)
+        
 
         if modo.strip().lower() == "check":
             CelulaValor(ws, 4, "PRODUTOS", linha=9)
+            CelulaValor(ws, 5, "DESCONTOS", linha=9)
             CelulaValor(ws, 4, "=C12-D12+E12", linha=13)
 
         # Dados
