@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  push:
+    tags:
+      - "v*"
 
 jobs:
   build-windows:
@@ -19,20 +22,28 @@ jobs:
         with:
           python-version: "3.11"
 
-    - name: Instalar dependências
-      shell: cmd
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pyinstaller
+      - name: Instalar dependências
+        shell: cmd
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
 
-    - name: Build com PyInstaller
-      run: |
-        pyinstaller --noconsole --onefile --add-data=powerBI.pbix;. main.py
+      - name: Build com PyInstaller
+        run: |
+          pyinstaller --noconsole --onefile --add-data=powerBI.pbix;. main.py
 
-      - name: Publicar artefato (EXE)
+      - name: Upload artefato (EXE)
         uses: actions/upload-artifact@v4
         with:
-          name: app-windows
+          name: app-windows-exe
           path: dist/main.exe
           if-no-files-found: error
+
+      - name: Criar Release (apenas para tags)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/main.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
