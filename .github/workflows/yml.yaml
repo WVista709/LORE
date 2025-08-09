@@ -31,6 +31,7 @@ jobs:
           pip install pyinstaller
 
       - name: Build com PyInstaller
+        shell: cmd
         run: |
           pyinstaller --noconsole --onefile --add-data=powerBI.pbix;. main.py
 
