@@ -1,6 +1,14 @@
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 
+def api(caminho_final, modo):
+    sefaz(caminho_final, modo)
+    alterdata(caminho_final, modo)
+    produto(caminho_final)
+    Check.check_compras(caminho_final, modo)
+    Check.check_vendas(caminho_final, modo)
+    return caminho_final
+
 class Check:
     @staticmethod
     def formatacao_numeros(ws, min_row, max_row, min_col, max_col):

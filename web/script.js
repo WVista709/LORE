@@ -1,101 +1,187 @@
-const modos = {
-    "Conferência de Nota": [
-        { grupo: "COMPRAS", abas: ["COMPRAS SEFAZ", "COMPRAS ALTERDATA"] },
-        { grupo: "VENDAS", abas: ["VENDAS SEFAZ", "VENDAS ALTERDATA"] }
+let currentMode = 'conferencia';
+let selectedFiles = {};
+let selectedDirectory = null;
+let isProcessing = false;
+    
+const modes = {
+    'conferencia': [
+        {
+            name: 'COMPRAS',
+            tabs: ['COMPRAS SEFAZ', 'COMPRAS ALTERDATA']
+        },
+        {
+            name: 'VENDAS',
+            tabs: ['VENDAS SEFAZ', 'VENDAS ALTERDATA']
+        }
     ],
-    "Check": [
-        { grupo: "COMPRAS", abas: ["COMPRAS SEFAZ", "COMPRAS ALTERDATA", "COMPRAS PRODUTOS"] },
-        { grupo: "VENDAS", abas: ["VENDAS SEFAZ", "VENDAS ALTERDATA", "VENDAS PRODUTOS"] }
+    'check': [
+        {
+            name: 'COMPRAS',
+            tabs: ['COMPRAS SEFAZ', 'COMPRAS ALTERDATA', 'COMPRAS PRODUTOS']
+        },
+        {
+            name: 'VENDAS',
+            tabs: ['VENDAS SEFAZ', 'VENDAS ALTERDATA', 'VENDAS PRODUTOS']
+        }
     ]
 };
 
-let modoAtual = "Conferência de Nota";
-let arquivosSelecionados = {};
+function selectMode(mode) {
+    if (isProcessing) {
+        alert('Processo em andamento. Aguarde terminar para mudar o modo.');
+        return;
+    }
+    
+    currentMode = mode;
+    selectedFiles = {};
+    selectedDirectory = null;
+    
+    // Atualizar botões de modo
+    document.getElementById('conferencia-btn').classList.remove('active');
+    document.getElementById('check-btn').classList.remove('active');
+    document.getElementById(mode + '-btn').classList.add('active');
+    
+    // Limpar diretório
+    document.getElementById('directory-path').textContent = 'Nenhum diretório selecionado';
+    document.getElementById('confirm-btn').disabled = true;
+    
+    // Resetar nome do arquivo
+    document.getElementById('filename-input').value = 'planilhas_agrupadas';
+    
+    // Atualizar status
+    const modeText = mode === 'conferencia' ? 'Conferência de Nota' : 'Check';
+    document.getElementById('status-label').textContent = `Modo selecionado: ${modeText}. Aguardando ação...`;
+    
+    // Criar seções de arquivos
+    createFileSections();
+}
 
-function renderizarGrupos() {
-    const container = document.getElementById('gruposContainer');
+function createFileSections() {
+    const container = document.getElementById('file-sections');
     container.innerHTML = '';
-    arquivosSelecionados = {};
-    modos[modoAtual].forEach(grupo => {
-        const card = document.createElement('div');
-        card.className = "card mb-3";
-        const cardBody = document.createElement('div');
-        cardBody.className = "card-body";
-        cardBody.innerHTML = `<h5 class="card-title">${grupo.grupo}</h5>`;
-        grupo.abas.forEach(aba => {
+    
+    const groups = modes[currentMode];
+    
+    groups.forEach(group => {
+        const section = document.createElement('div');
+        section.className = 'group-section';
+        
+        const title = document.createElement('div');
+        title.className = 'group-title';
+        title.textContent = group.name;
+        section.appendChild(title);
+        
+        group.tabs.forEach(tab => {
             const row = document.createElement('div');
-            row.className = "row align-items-center mb-2";
-            row.innerHTML = `
-                <div class="col-4">
-                    <label class="file-label">${aba}:</label>
-                </div>
-                <div class="col-5">
-                    <input type="file" class="form-control" name="arquivo_${aba}" accept=".xlsx,.csv,.xls" required>
-                </div>
-            `;
-            cardBody.appendChild(row);
+            row.className = 'file-row';
+            
+            const btn = document.createElement('button');
+            btn.className = 'file-btn';
+            btn.textContent = tab;
+            btn.onclick = () => selectFile(tab);
+            
+            const status = document.createElement('div');
+            status.className = 'file-status';
+            status.id = 'status-' + tab.replace(/\s+/g, '-');
+            status.textContent = 'Nada selecionado';
+            
+            row.appendChild(btn);
+            row.appendChild(status);
+            section.appendChild(row);
         });
-        card.appendChild(cardBody);
-        container.appendChild(card);
-    });
-    habilitarBotao();
-    // Atualiza labels ao selecionar arquivo
-    document.querySelectorAll('input[type="file"]').forEach(input => {
-        input.addEventListener('change', function() {
-            const aba = this.name.replace('arquivo_', '').replace(/_/g, ' ');
-            const label = document.getElementById('label_' + aba.replace(/\s/g, '_'));
-            if (this.files.length > 0) {
-                label.textContent = this.files[0].name;
-                arquivosSelecionados[aba] = this.files[0];
-            } else {
-                label.textContent = "Nada selecionado";
-                delete arquivosSelecionados[aba];
-            }
-            habilitarBotao();
-        });
+        
+        container.appendChild(section);
     });
 }
 
-function selecionarModo(modo) {
-    modoAtual = modo;
-    document.getElementById('btnConferencia').classList.toggle('active', modo === "Conferência de Nota");
-    document.getElementById('btnCheck').classList.toggle('active', modo === "Check");
-    renderizarGrupos();
-    document.getElementById('status').textContent = `Modo selecionado: ${modo}. Aguardando ação...`;
-}
-
-function habilitarBotao() {
-    // Habilita o botão se todos os arquivos obrigatórios estiverem selecionados
-    const totalAbas = modos[modoAtual].reduce((acc, grupo) => acc + grupo.abas.length, 0);
-    const btn = document.getElementById('btnAgrupar');
-    btn.disabled = Object.keys(arquivosSelecionados).length !== totalAbas;
-}
-
-document.getElementById('formAgrupamento').addEventListener('submit', function(e) {
-    e.preventDefault();
-    // Simula envio e progresso
-    document.getElementById('status').textContent = "Processando...";
-    const barra = document.getElementById('barraProgresso');
-    barra.style.width = "0%";
-    barra.textContent = "0%";
-    let progresso = 0;
-    const interval = setInterval(() => {
-        progresso += 10;
-        barra.style.width = progresso + "%";
-        barra.textContent = progresso + "%";
-        if (progresso >= 100) {
-            clearInterval(interval);
-            document.getElementById('status').textContent = "Concluído! Arquivo agrupado com sucesso.";
-            setTimeout(() => {
-                barra.style.width = "0%";
-                barra.textContent = "0%";
-                document.getElementById('status').textContent = "Aguardando ação...";
-            }, 3000);
+function selectFile(tabName) {
+    // Simular seleção de arquivo (em uma aplicação real, usaria input file)
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.csv,.xls';
+    input.onchange = function(e) {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            selectedFiles[tabName] = file;
+            const statusId = 'status-' + tabName.replace(/\s+/g, '-');
+            document.getElementById(statusId).textContent = file.name;
         }
-    }, 300);
-});
+    };
+    input.click();
+}
 
-// Inicializa quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', function() {
-    renderizarGrupos();
-});
+function selectDirectory() {
+    
+    // Simular seleção de diretório (em uma aplicação real, usaria API específica)
+    const path = prompt('Digite o caminho do diretório de destino:');
+    if (path) {
+        selectedDirectory = path;
+        document.getElementById('directory-path').textContent = path;
+        document.getElementById('confirm-btn').disabled = false;
+    }
+}
+    
+async function confirmProcess() {
+    try {
+        const formData = new FormData();
+        for (const [tabName, file] of Object.entries(selectedFiles)) {
+        formData.append('exceis', file);
+        formData.append('aba', tabName);
+        }
+        formData.append('nome_saida', document.getElementById('filename-input').value || 'planilhas_agrupadas');
+        formData.append('modo', currentMode)
+
+        await fetch('http://127.0.0.1:8000/processar', { method: 'POST', body: formData });
+    } catch (error) {
+        console.log('Network error:', error);
+    }
+}
+    
+function simulateProcess() {
+    const steps = [
+        'Iniciando agrupamento dos arquivos...',
+        'Agrupando arquivos',
+        'Processando SEFAZ',
+        'Processando ALTERDATA',
+        'Processando PRODUTO',
+        'Verificando COMPRAS',
+        'Verificando VENDAS'
+    ];
+    
+    let currentStep = 0;
+    const progressFill = document.getElementById('progress-fill');
+    const statusLabel = document.getElementById('status-label');
+    
+    const interval = setInterval(() => {
+        if (currentStep < steps.length) {
+            statusLabel.textContent = steps[currentStep] + ' - Tempo decorrido: ' + (currentStep * 2 + 2) + '.0 s';
+            progressFill.style.width = ((currentStep + 1) / steps.length * 100) + '%';
+            currentStep++;
+        } else {
+            clearInterval(interval);
+            
+            // Finalizar processo
+            statusLabel.textContent = 'Concluído em 14.00 segundos. Processo finalizado.';
+            document.getElementById('confirm-btn').disabled = false;
+            document.getElementById('confirm-btn').textContent = 'Agrupar em um Excel';
+            progressFill.style.width = '0%';
+            isProcessing = false;
+            
+            // Limpar seleções
+            selectedFiles = {};
+            selectedDirectory = null;
+            document.getElementById('directory-path').textContent = 'Nenhum diretório selecionado';
+            document.getElementById('filename-input').value = 'planilhas_agrupadas';
+            document.getElementById('confirm-btn').disabled = true;
+            
+            // Resetar status dos arquivos
+            const statusElements = document.querySelectorAll('.file-status');
+            statusElements.forEach(el => {
+                el.textContent = 'Nada selecionado';
+            });
+        }
+    }, 2000);
+}
+    
+// Inicializar interface
+createFileSections();
