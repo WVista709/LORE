@@ -58,17 +58,18 @@ class Check:
             CelulaValor(ws, 2, '=B3+B4', linha=5)
 
         if "COMPRAS ALTERDATA" in abas_existentes:
-            CelulaValor(ws, 3, '=SUMIFS(\'COMPRAS ALTERDATA\'!J:J,\'COMPRAS ALTERDATA\'!I:I,"NÃO")', linha=3)
-            CelulaValor(ws, 3, '=SUMIFS(\'COMPRAS ALTERDATA\'!J:J,\'COMPRAS ALTERDATA\'!I:I,"SIM")', linha=4)
+            CelulaValor(ws, 3, '=SUMIFS(\'COMPRAS ALTERDATA\'!K:K,\'COMPRAS ALTERDATA\'!J:J,"NÃO")', linha=3)
+            CelulaValor(ws, 3, '=SUMIFS(\'COMPRAS ALTERDATA\'!K:K,\'COMPRAS ALTERDATA\'!J:J,"SIM")', linha=4)
             CelulaValor(ws, 3, '=C3+C4', linha=5)
 
         if "COMPRAS PRODUTOS" in abas_existentes:
-            CelulaValor(ws, 4, '=SUMIFS(\'COMPRAS PRODUTOS\'!J:J,\'COMPRAS PRODUTOS\'!H:H,"NÃO")', linha=3)
-            CelulaValor(ws, 4, '=SUMIFS(\'COMPRAS PRODUTOS\'!J:J,\'COMPRAS PRODUTOS\'!H:H,"SIM")', linha=4)
+            CelulaValor(ws, 4, '=SUMIFS(\'COMPRAS PRODUTOS\'!K:K,\'COMPRAS PRODUTOS\'!I:I,"NÃO")', linha=3)
+            CelulaValor(ws, 4, '=SUMIFS(\'COMPRAS PRODUTOS\'!K:K,\'COMPRAS PRODUTOS\'!I:I,"SIM")', linha=4)
             CelulaValor(ws, 4, '=D3+D4', linha=5)
 
-            CelulaValor(ws, 5, '=SUMIFS(\'COMPRAS PRODUTOS\'!K:K,\'COMPRAS PRODUTOS\'!H:H,"NÃO")', linha=3)
-            CelulaValor(ws, 5, '=SUMIFS(\'COMPRAS PRODUTOS\'!K:K,\'COMPRAS PRODUTOS\'!H:H,"SIM")', linha=4)
+            #DESCONTOS
+            CelulaValor(ws, 5, '=SUMIFS(\'COMPRAS PRODUTOS\'!L:L,\'COMPRAS PRODUTOS\'!I:I,"NÃO")', linha=3)
+            CelulaValor(ws, 5, '=SUMIFS(\'COMPRAS PRODUTOS\'!L:L,\'COMPRAS PRODUTOS\'!I:I,"SIM")', linha=4)
             CelulaValor(ws, 5, '=E3+E4', linha=5)
 
         wb.save(caminho_final)
@@ -113,17 +114,17 @@ class Check:
             CelulaValor(ws, 2, '=B10+B11', linha=12)
 
         if "VENDAS ALTERDATA" in abas_existentes:
-            CelulaValor(ws, 3, '=SUMIFS(\'VENDAS ALTERDATA\'!J:J,\'VENDAS ALTERDATA\'!I:I,"NÃO")', linha=10)
-            CelulaValor(ws, 3, '=SUMIFS(\'VENDAS ALTERDATA\'!J:J,\'VENDAS ALTERDATA\'!I:I,"SIM")', linha=11)
+            CelulaValor(ws, 3, '=SUMIFS(\'VENDAS ALTERDATA\'!K:K,\'VENDAS ALTERDATA\'!J:J,"NÃO")', linha=10)
+            CelulaValor(ws, 3, '=SUMIFS(\'VENDAS ALTERDATA\'!K:K,\'VENDAS ALTERDATA\'!J:J,"SIM")', linha=11)
             CelulaValor(ws, 3, '=C10+C11', linha=12)
 
         if "VENDAS PRODUTOS" in abas_existentes:
-            CelulaValor(ws, 4, '=SUMIFS(\'VENDAS PRODUTOS\'!J:J,\'VENDAS PRODUTOS\'!H:H,"NÃO")', linha=10)
-            CelulaValor(ws, 4, '=SUMIFS(\'VENDAS PRODUTOS\'!J:J,\'VENDAS PRODUTOS\'!H:H,"SIM")', linha=11)
+            CelulaValor(ws, 4, '=SUMIFS(\'VENDAS PRODUTOS\'!K:K,\'VENDAS PRODUTOS\'!I:I,"NÃO")', linha=10)
+            CelulaValor(ws, 4, '=SUMIFS(\'VENDAS PRODUTOS\'!K:K,\'VENDAS PRODUTOS\'!I:I,"SIM")', linha=11)
             CelulaValor(ws, 4, '=D10+D11', linha=12)
 
-            CelulaValor(ws, 5, '=SUMIFS(\'VENDAS PRODUTOS\'!K:K,\'VENDAS PRODUTOS\'!H:H,"NÃO")', linha=10)
-            CelulaValor(ws, 5, '=SUMIFS(\'VENDAS PRODUTOS\'!K:K,\'VENDAS PRODUTOS\'!H:H,"SIM")', linha=11)
+            CelulaValor(ws, 5, '=SUMIFS(\'VENDAS PRODUTOS\'!L:L,\'VENDAS PRODUTOS\'!I:I,"NÃO")', linha=10)
+            CelulaValor(ws, 5, '=SUMIFS(\'VENDAS PRODUTOS\'!L:L,\'VENDAS PRODUTOS\'!I:I,"SIM")', linha=11)
             CelulaValor(ws, 5, '=E10+E11', linha=12)
 
         wb.save(caminho_final)
@@ -164,7 +165,7 @@ def sefaz(caminho_final, modo):
         # Insere fórmula para aba_referencia se existir
         if aba_referencia in abas_existentes:
             for linha in range(2, linhas + 1):
-                formula = f'=IFERROR(VLOOKUP(C{linha},\'{aba_referencia}\'!B:B,1,0),"ERRO")'
+                formula = f'=IFERROR(VLOOKUP(C{linha},\'{aba_referencia}\'!C:C,1,0),"ERRO")'
                 CelulaValor(ws, colunas + 2, formula, linha=linha)
         else:
             print(f"Aba de referência '{aba_referencia}' não existe. Fórmulas não inseridas em '{aba}'.")
@@ -172,7 +173,7 @@ def sefaz(caminho_final, modo):
         # Insere fórmula para aba_produto se modo Check e aba_produto existir
         if modo.strip().lower() == "check" and aba_produto in abas_existentes:
             for linha in range(2, linhas + 1):
-                formula = f'=IFERROR(VLOOKUP(C{linha},\'{aba_produto}\'!B:B,1,0),"ERRO")'
+                formula = f'=IFERROR(VLOOKUP(C{linha},\'{aba_produto}\'!C:C,1,0),"ERRO")'
                 CelulaValor(ws, colunas + 3, formula, linha=linha)
         elif modo.strip().lower() == "check":
             print(f"Aba de referência '{aba_produto}' não existe. Fórmulas PRODUTOS não inseridas em '{aba}'.")
@@ -209,7 +210,7 @@ def alterdata(caminho_final, modo):
         # Insere fórmula para aba_referencia se existir
         if aba_referencia in abas_existentes:
             for linha in range(2, linhas + 1):
-                formula = f'=IFERROR(VLOOKUP(B{linha},\'{aba_referencia}\'!C:C,1,0),"ERRO")'
+                formula = f'=IFERROR(VLOOKUP(C{linha},\'{aba_referencia}\'!C:C,1,0),"ERRO")'
                 CelulaValor(ws, colunas + 1, formula, linha=linha)
         else:
             print(f"Aba de referência '{aba_referencia}' não existe. Fórmulas não inseridas em '{aba}'.")
@@ -217,7 +218,7 @@ def alterdata(caminho_final, modo):
         # Insere fórmula para aba_produto se modo Check e aba_produto existir
         if modo.strip().lower() == "check" and aba_produto in abas_existentes:
             for linha in range(2, linhas + 1):
-                formula = f'=IFERROR(VLOOKUP(B{linha},\'{aba_produto}\'!B:B,1,0),"ERRO")'
+                formula = f'=IFERROR(VLOOKUP(C{linha},\'{aba_produto}\'!C:C,1,0),"ERRO")'
                 CelulaValor(ws, colunas + 2, formula, linha=linha)
         elif modo.strip().lower() == "check":
             print(f"Aba de referência '{aba_produto}' não existe. Fórmulas PRODUTOS não inseridas em '{aba}'.")
@@ -249,7 +250,7 @@ def produto(caminho_final):
         # Insere fórmula para SEFAZ se existir
         if aba_sefaz in abas_existentes:
             for linha in range(2, linhas + 1):
-                formula_sefaz = f'=IFERROR(VLOOKUP(B{linha},\'{aba_sefaz}\'!C:C,1,0),"ERRO")'
+                formula_sefaz = f'=IFERROR(VLOOKUP(C{linha},\'{aba_sefaz}\'!C:C,1,0),"ERRO")'
                 CelulaValor(ws, colunas + 1, formula_sefaz, linha=linha)
         else:
             print(f"Aba de referência '{aba_sefaz}' não existe. Fórmulas SEFAZ não inseridas em '{aba}'.")
@@ -257,7 +258,7 @@ def produto(caminho_final):
         # Insere fórmula para ALTERDATA se existir
         if aba_alterdata in abas_existentes:
             for linha in range(2, linhas + 1):
-                formula_alterdata = f'=IFERROR(VLOOKUP(B{linha},\'{aba_alterdata}\'!B:B,1,0),"ERRO")'
+                formula_alterdata = f'=IFERROR(VLOOKUP(C{linha},\'{aba_alterdata}\'!C:C,1,0),"ERRO")'
                 CelulaValor(ws, colunas + 2, formula_alterdata, linha=linha)
         else:
             print(f"Aba de referência '{aba_alterdata}' não existe. Fórmulas ALTERDATA não inseridas em '{aba}'.")
