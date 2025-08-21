@@ -53,9 +53,10 @@ async def processar(
         os.makedirs(downloads_dir, exist_ok=True)
         saida_path = os.path.join(downloads_dir, f"{nome_saida}.xlsx")
 
-        # 1) Agrega os arquivos nas abas corretas
+        #Agrega os arquivos nas abas corretas e formatando
         caminho_gerado = conversor.agrupar_excels_em_um(arquivos_selecionados, saida_path)
 
+        #Criando o arquivo final
         caminho_final = check_bruto.api(caminho_gerado, modo)
 
         return {"message": "OK", "output_path": caminho_final, "modo": modo}

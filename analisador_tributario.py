@@ -1,20 +1,24 @@
-import pandas as pd
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.ensemble import IsolationForest
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error
-from sklearn.linear_model import LinearRegression
+import pandas as pd
+from openpyxl import *
+from openpyxl.utils import get_column_letter
 
-#Abrindo o excel
-excel_path = r"C:\Users\Prime Contabil\Downloads\DJE.xlsx"
-excel = pd.read_excel(excel_path, sheet_name="COMPRAS PRODUTOS", engine="openpyxl")
+#Caminho do excel
+excel_path = os.path.join("/home/massani/Downloads", "DJE.xlsx")
 
-excel.columns = [c.strip().lower() for c in excel.columns]
+#Adicionando uma nova coluna na aba de produtos
+wb = load_workbook(excel_path)
+ws = wb["COMPRAS PRODUTOS"]
+ws[get_column_letter(ws.max_column + 1) + "1"] = "TIPO".upper()
 
-coluna = "nome produto"  # troque pelo nome exato
-serie = excel[coluna]              # Series (um vetor)
-lista_valores = excel[coluna].tolist()  # como lista
-print(serie.head())
+def letra_cabecalho(cabecalho: str):
+    coluna = None
+    for col in range(1, ws.max_column + 1):
+        cell_value = ws[f"{get_column_letter(col)}1"].value
+        if cell_value == cabecalho:
+            coluna = col
+            print(f"Cabeçalho {cabecalho} da coluna {coluna}")
+            return coluna
+    
+coluna_cfop = letra_cabecalho("CFOP")
+coluna_tipo = letra_cabecalho("TIPO")
