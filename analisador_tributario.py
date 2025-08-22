@@ -1,5 +1,5 @@
-import os, sys
-from openpyxl import *
+import os, sys, builtins
+from openpyxl import load_workbook, Workbook
 from openpyxl.utils import get_column_letter
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -37,6 +37,10 @@ ws_vendas_produtos = wb["VENDAS PRODUTOS"]
 if letra_cabecalho("TIPO CFOP", ws_compras_produtos) == None:
     ws_compras_produtos[get_column_letter(ws_compras_produtos.max_column + 1) + "1"] = "TIPO CFOP"
 
+#Criando uma nova tabela
+if letra_cabecalho("TIPO CFOP", ws_vendas_produtos) == None:
+    ws_vendas_produtos[get_column_letter(ws_vendas_produtos.max_column + 1) + "1"] = "TIPO CFOP"
+
 #Pegando a letra da coluna
 coluna_compras_cfop = letra_cabecalho("CFOP", ws_compras_produtos)
 coluna_compras_ncm = letra_cabecalho("Classificação", ws_compras_produtos)
@@ -49,7 +53,6 @@ coluna_compras_icms = letra_cabecalho("CST ICMS", ws_compras_produtos)
 
 #Criando a aba PRODUTOS e copiado os produtos para la
 wb.create_sheet("PRODUTOS")
-wb.create_sheet("CONFIG")
 aba_produtos = wb["PRODUTOS"]
 aba_produtos["A1"] = "PRODUTOS"
 aba_produtos["B1"] = "NCM"
@@ -125,9 +128,47 @@ df_matriz_tributaria = pd.read_excel('MatrizTributaria.xlsx')
 X_train = df_matriz_tributaria['PRODUTO'].astype(str)
 y_train = df_matriz_tributaria['CLASSIFICAÇÃO'].astype(str)
 
+df_cfop = pd.read_excel('MatrizTributaria.xlsx', sheet_name="CFOP")
+cfop_series = df_cfop['CFOP'].astype(int)
+
+cfop_numeric = pd.to_numeric(cfop_series, errors='coerce')
+df_cfop['_CFOP_num'] = cfop_numeric
+
+cfop_to_id = dict(zip(df_cfop['CFOP'], df_cfop['ID']))
+
 #ABAS
 df_planilha = pd.read_excel("TESTE.xlsx", sheet_name=None)
 df_produtos = df_planilha['PRODUTOS']
+df_compras_produtos = df_planilha['COMPRAS PRODUTOS']
+df_vendas_produtos = df_planilha['VENDAS PRODUTOS']
+
+#print(f"\nColunas disponíveis em PRODUTOS: {list(df_produtos.columns)}")
+#print(f"Primeiras 5 linhas da aba PRODUTOS:")
+#print(df_produtos.head())
+
+#Preenche ID-CFOP baseado no CFOP
+nao_encontrados = None
+
+if 'CFOP' in df_produtos.columns and 'ID-CFOP' in df_produtos.columns:
+    # Mapeia CFOP para ID usando o dicionário
+    df_produtos['ID-CFOP'] = df_produtos['CFOP'].map(cfop_to_id).fillna('')
+    
+    #print(f"\nResultado após preenchimento:")
+    #print(df_produtos[['CFOP', 'ID-CFOP']].head(10))
+    
+    # Verifica se há CFOPs não encontrados
+    nao_encontrados = df_produtos[df_produtos['ID-CFOP'] == '']
+    if not nao_encontrados.empty:
+        print("\nCFOPs não encontrados na matriz tributária:")
+        print(nao_encontrados['CFOP'].dropna().unique())
+else:
+    print("Colunas 'CFOP' ou 'ID-CFOP' não encontradas na aba PRODUTOS")
+
+if 'CFOP' in df_vendas_produtos.columns and 'TIPO CFOP' in df_vendas_produtos.columns:
+    teste = df_vendas_produtos['TIPO CFOP'] = df_vendas_produtos['CFOP'].map(cfop_to_id)
+
+if 'CFOP' in df_compras_produtos.columns and 'TIPO CFOP' in df_compras_produtos.columns:
+    teste = df_compras_produtos['TIPO CFOP'] = df_compras_produtos['CFOP'].map(cfop_to_id)
 
 #Vetorizando os produtos
 vectorizer = TfidfVectorizer()
@@ -149,12 +190,35 @@ limiar = 0.6
 df_produtos['CLASSIFICAÇÃO'] = model.predict(X_test_vec)
 df_produtos['CONFIANCA'] = max_probas
 df_produtos.loc[df_produtos['CONFIANCA'] < limiar, 'CLASSIFICAÇÃO'] = 'Não Classificado'
+
+#Checando os produtos não classificados
+mask_nc = df_produtos['CLASSIFICAÇÃO'] == 'Não Classificado'
+produtos_nc = df_produtos.loc[mask_nc, 'PRODUTOS'].astype(str).tolist()
+
+#Prepara lista de CFOPs não classificados com segurança
+cfops_nc = []
+if isinstance(nao_encontrados, type(None)) or nao_encontrados.empty:
+    cfops_nc = []
+else:
+    #Converte para string para evitar problemas ao escrever
+    cfops_nc = [str(x) for x in nao_encontrados['CFOP'].dropna().unique()]
+
+with open('produtos_nao_classificados.txt', 'w', encoding='utf-8') as f:
+    f.write("PRODUTOS NÃO CLASSIFICADOS\n")
+    for p in produtos_nc:
+        f.write(p + '\n')
+
+    f.write("\nCFOP NÃO CLASSIFICADOS\n")
+    for i in cfops_nc:
+        f.write(i + '\n')
+    
 df_produtos.loc[df_produtos['CFOP'] == 1556, 'CLASSIFICAÇÃO'] = 'USO E CONSUMO'
-#df_produtos.loc[df_produtos['ID-CFOP']]
 
 # Carrega o workbook existente
 wb = load_workbook("TESTE.xlsx", data_only=False)  # data_only=False mantém fórmulas
 ws = wb["PRODUTOS"]
+ws_compras_produtos = wb["COMPRAS PRODUTOS"]
+ws_vendas_produtos = wb["VENDAS PRODUTOS"]
 
 # Mapeia colunas por nome (assumindo cabeçalhos na primeira linha)
 headers = [cell.value for cell in ws[1]]
@@ -167,12 +231,30 @@ def ensure_col(name):
         col_idx[name] = ws.max_column
 ensure_col("CLASSIFICAÇÃO")
 ensure_col("CONFIANCA")
+ensure_col("ID-CFOP")
 
 # Escreve valores linha a linha (assumindo que df_produtos está alinhado à aba)
 for i, row in df_produtos.iterrows():
     excel_row = i + 2  # +2 por causa do cabeçalho 1-based
     ws.cell(row=excel_row, column=col_idx["CLASSIFICAÇÃO"], value=row["CLASSIFICAÇÃO"])
     ws.cell(row=excel_row, column=col_idx["CONFIANCA"], value=float(row["CONFIANCA"]))
+    ws.cell(row=excel_row, column=col_idx["ID-CFOP"], value=str(row["ID-CFOP"]))
+
+#COMPRAS PRODUTOS
+headers = [cell.value for cell in ws_compras_produtos[1]]
+col_idx = {name: i+1 for i, name in enumerate(headers)}
+
+for i, row in df_compras_produtos.iterrows():
+    excel_row = i + 2
+    ws_compras_produtos.cell(row=excel_row, column=col_idx["TIPO CFOP"], value=row["TIPO CFOP"])
+
+#VENDAS PRODUTOS
+headers = [cell.value for cell in ws_vendas_produtos[1]]
+col_idx = {name: i+1 for i, name in enumerate(headers)}
+
+for i, row in df_vendas_produtos.iterrows():
+    excel_row = i + 2
+    ws_vendas_produtos.cell(row=excel_row, column=col_idx["TIPO CFOP"], value=row["TIPO CFOP"])
 
 # Salva sem reescrever as outras abas (fórmulas preservadas)
 wb.save("TESTE.xlsx")
