@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 
-def letra_cabecalho(cabecalho: str):
+def letra_cabecalho(cabecalho: str, ws: str):
     coluna = None
     for col in range(1, ws.max_column + 1):
         cell_value = (ws[f"{get_column_letter(col)}1"].value).upper()
@@ -27,95 +27,152 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-#MATRIZ TRIBUTARIA
-path_matriz = resource_path("MatrizTributaria.xlsx")
-wb_matriz = load_workbook(path_matriz)
-
 #Excel que vai ser modificado
 path_excel = os.path.join(r"C:\Users\Prime Contabil\Downloads", "TW CHECK 2025 07.xlsx")
 wb = load_workbook(path_excel)
-ws = wb["COMPRAS PRODUTOS"]
+ws_compras_produtos = wb["COMPRAS PRODUTOS"]
+ws_vendas_produtos = wb["VENDAS PRODUTOS"]
 
 #Criando uma nova tabela
-if letra_cabecalho("TIPO CFOP") == None:
-    ws[get_column_letter(ws.max_column + 1) + "1"] = "TIPO CFOP"
+if letra_cabecalho("TIPO CFOP", ws_compras_produtos) == None:
+    ws_compras_produtos[get_column_letter(ws_compras_produtos.max_column + 1) + "1"] = "TIPO CFOP"
 
 #Pegando a letra da coluna
-coluna_cfop = letra_cabecalho("CFOP")
-coluna_ncm = letra_cabecalho("Classificação")
-coluna_produto = letra_cabecalho("NOME PRODUTO")
-coluna_tipo_cfop = letra_cabecalho("TIPO CFOP")
+coluna_compras_cfop = letra_cabecalho("CFOP", ws_compras_produtos)
+coluna_compras_ncm = letra_cabecalho("Classificação", ws_compras_produtos)
+coluna_compras_cest = letra_cabecalho("CEST", ws_compras_produtos)
+coluna_compras_produto = letra_cabecalho("NOME PRODUTO", ws_compras_produtos)
+coluna_compras_tipo_cfop = letra_cabecalho("TIPO CFOP", ws_compras_produtos)
+coluna_compras_pis = letra_cabecalho("CST PIS", ws_compras_produtos)
+coluna_compras_cofins = letra_cabecalho("CST COFINS", ws_compras_produtos)
+coluna_compras_icms = letra_cabecalho("CST ICMS", ws_compras_produtos)
 
 #Criando a aba PRODUTOS e copiado os produtos para la
 wb.create_sheet("PRODUTOS")
-ws_produtos = wb["PRODUTOS"]
-ws_produtos["A1"] = "COMPRAS"
-ws_produtos["A2"] = "PRODUTOS"
-ws_produtos["B2"] = "NCM"
-ws_produtos["C2"] = "CFOP"
-ws_produtos["D2"] = "CLASSIFICAÇÃO"
+wb.create_sheet("CONFIG")
+aba_produtos = wb["PRODUTOS"]
+aba_produtos["A1"] = "PRODUTOS"
+aba_produtos["B1"] = "NCM"
+aba_produtos["C1"] = "CFOP"
+aba_produtos["D1"] = "ID-CFOP"
+aba_produtos["E1"] = "CLASSIFICAÇÃO"
+aba_produtos["F1"] = "CONFIANCA"
+aba_produtos["G1"] = "CEST PIS"
+aba_produtos["H1"] = "CEST COFINS"
+aba_produtos["I1"] = "CEST ICMS"
+#aba_produtos["J1"] = "CORREÇÃO PIS"
+#aba_produtos["K1"] = "CORREÇÃO COFINS"
+#aba_produtos["L1"] = "CORREÇÃO ICMS"
 
 #Pegando os produtos, ncm e cfop
 produtos_unicos = set()
-row_destino = 3
+row_destino = 2
 
-#Iterar linha por linha para manter a relação produto-NCM-CFOP
-for row_num in range(2, ws.max_row + 1):
-    produto = ws[f"{coluna_produto}{row_num}"].value
-    ncm = ws[f"{coluna_ncm}{row_num}"].value
-    cfop = ws[f"{coluna_cfop}{row_num}"].value
+#Iterar linha por linha para manter a relação produto-NCM-CFOP NO COMPRAS
+for row_num in range(2, ws_compras_produtos.max_row + 1):
+    produto = ws_compras_produtos[f"{coluna_compras_produto}{row_num}"].value
+    ncm = ws_compras_produtos[f"{coluna_compras_ncm}{row_num}"].value
+    cfop = ws_compras_produtos[f"{coluna_compras_cfop}{row_num}"].value
+    pis = ws_compras_produtos[f"{coluna_compras_pis}{row_num}"].value
+    cofins = ws_compras_produtos[f"{coluna_compras_cofins}{row_num}"].value
+    icms = ws_compras_produtos[f"{coluna_compras_icms}{row_num}"].value
     
-    # Criar uma chave única para evitar duplicatas
+    #Criar uma chave única para evitar duplicatas
     chave_produto = (produto, ncm, cfop)
     
     if produto is not None and chave_produto not in produtos_unicos:
         produtos_unicos.add(chave_produto)
         
-        # Escrever na planilha destino
-        ws_produtos[f"A{row_destino}"] = produto
-        ws_produtos[f"B{row_destino}"] = ncm
-        ws_produtos[f"C{row_destino}"] = cfop
+        #Escrever na planilha destino
+        aba_produtos[f"A{row_destino}"] = produto
+        aba_produtos[f"B{row_destino}"] = ncm
+        aba_produtos[f"C{row_destino}"] = cfop
+        aba_produtos[f"G{row_destino}"] = pis
+        aba_produtos[f"H{row_destino}"] = cofins
+        aba_produtos[f"I{row_destino}"] = icms
         row_destino += 1
 
+#Iterar linha por linha para manter a relação produto-NCM-CFOP NO VENDAS
+for row_num in range(2, ws_vendas_produtos.max_row + 1):
+    produto = ws_vendas_produtos[f"{coluna_compras_produto}{row_num}"].value
+    ncm = ws_vendas_produtos[f"{coluna_compras_ncm}{row_num}"].value
+    cfop = ws_vendas_produtos[f"{coluna_compras_cfop}{row_num}"].value
+    pis = ws_vendas_produtos[f"{coluna_compras_pis}{row_num}"].value
+    cofins = ws_vendas_produtos[f"{coluna_compras_cofins}{row_num}"].value
+    icms = ws_vendas_produtos[f"{coluna_compras_icms}{row_num}"].value
+    
+    #Criar uma chave única para evitar duplicatas
+    chave_produto = (produto, ncm, cfop)
+    
+    if produto is not None and chave_produto not in produtos_unicos:
+        produtos_unicos.add(chave_produto)
+        
+        #Escrever na planilha destino
+        aba_produtos[f"A{row_destino}"] = produto
+        aba_produtos[f"B{row_destino}"] = ncm
+        aba_produtos[f"C{row_destino}"] = cfop
+        aba_produtos[f"G{row_destino}"] = pis
+        aba_produtos[f"H{row_destino}"] = cofins
+        aba_produtos[f"I{row_destino}"] = icms
+        row_destino += 1
+
+#ws_produtos.insert_rows(idx=2, amount=10)
 wb.save("TESTE.xlsx")
+#Ate aqui OK
 
-# 1. Carregar a base tributaria
-df_base = pd.read_excel('MatrizTributaria.xlsx')
-X_train = df_base['PRODUTO'].astype(str)
-y_train = df_base['CLASSIFICAÇÃO'].astype(str)
+#Carregar a base tributaria
+df_matriz_tributaria = pd.read_excel('MatrizTributaria.xlsx')
+X_train = df_matriz_tributaria['PRODUTO'].astype(str)
+y_train = df_matriz_tributaria['CLASSIFICAÇÃO'].astype(str)
 
-#ABa de cfop
-df_cfop = pd.read_excel('MatrizTributaria.xlsx', sheet_name='CFOP') 
+#ABAS
+df_planilha = pd.read_excel("TESTE.xlsx", sheet_name=None)
+df_produtos = df_planilha['PRODUTOS']
 
-# 2. Vetorizar os nomes dos produtos
+#Vetorizando os produtos
 vectorizer = TfidfVectorizer()
 X_train_vec = vectorizer.fit_transform(X_train)
 
-# 3. Treinar o modelo
+#Criando o modelo de treino
 model = RandomForestClassifier()
 model.fit(X_train_vec, y_train)
 
-# 4. Carregar os produtos a classificar
-df_teste = pd.read_excel('TESTE.xlsx', skiprows=1, sheet_name="PRODUTOS")
-produtos_teste = df_teste['PRODUTOS'].astype(str)
+#Aplicando o modelo
+produtos_teste = df_produtos['PRODUTOS'].astype(str)
 X_test_vec = vectorizer.transform(produtos_teste)
 
 probas = model.predict_proba(X_test_vec)
 max_probas = probas.max(axis=1)
 
-# Defina um limiar de confiança, ex: 0.6
+#Garantindo uma qualidade sobre a decisão
 limiar = 0.6
-df_teste['CLASSIFICAÇÃO'] = model.predict(X_test_vec)
-df_teste['CONFIANCA'] = max_probas
+df_produtos['CLASSIFICAÇÃO'] = model.predict(X_test_vec)
+df_produtos['CONFIANCA'] = max_probas
+df_produtos.loc[df_produtos['CONFIANCA'] < limiar, 'CLASSIFICAÇÃO'] = 'Não Classificado'
+df_produtos.loc[df_produtos['CFOP'] == 1556, 'CLASSIFICAÇÃO'] = 'USO E CONSUMO'
+#df_produtos.loc[df_produtos['ID-CFOP']]
 
-# 5. Prever as classificações
-df_teste['CLASSIFICAÇÃO'] = model.predict(X_test_vec)
+# Carrega o workbook existente
+wb = load_workbook("TESTE.xlsx", data_only=False)  # data_only=False mantém fórmulas
+ws = wb["PRODUTOS"]
 
-# Se a confiança for baixa, marque como "Não Classificado"
-df_teste.loc[df_teste['CONFIANCA'] < limiar, 'CLASSIFICAÇÃO'] = 'Não Classificado'
+# Mapeia colunas por nome (assumindo cabeçalhos na primeira linha)
+headers = [cell.value for cell in ws[1]]
+col_idx = {name: i+1 for i, name in enumerate(headers)}
 
-df_teste.loc[df_teste['CFOP'] == 1556, 'CLASSIFICAÇÃO'] = 'USO E CONSUMO'
+# Garante que colunas existam (cria cabeçalhos se faltarem)
+def ensure_col(name):
+    if name not in col_idx:
+        ws.cell(row=1, column=ws.max_column+1, value=name)
+        col_idx[name] = ws.max_column
+ensure_col("CLASSIFICAÇÃO")
+ensure_col("CONFIANCA")
 
-# 6. Salvar o resultado
-df_teste.to_excel('TESTE_classificado_IA.xlsx', index=False)
-print("Arquivo classificado salvo como TESTE_classificado_IA.xlsx")
+# Escreve valores linha a linha (assumindo que df_produtos está alinhado à aba)
+for i, row in df_produtos.iterrows():
+    excel_row = i + 2  # +2 por causa do cabeçalho 1-based
+    ws.cell(row=excel_row, column=col_idx["CLASSIFICAÇÃO"], value=row["CLASSIFICAÇÃO"])
+    ws.cell(row=excel_row, column=col_idx["CONFIANCA"], value=float(row["CONFIANCA"]))
+
+# Salva sem reescrever as outras abas (fórmulas preservadas)
+wb.save("TESTE.xlsx")

@@ -63,13 +63,13 @@ class Check:
             CelulaValor(ws, 3, '=C3+C4', linha=5)
 
         if "COMPRAS PRODUTOS" in abas_existentes:
-            CelulaValor(ws, 4, '=SUMIFS(\'COMPRAS PRODUTOS\'!K:K,\'COMPRAS PRODUTOS\'!I:I,"NÃO")', linha=3)
-            CelulaValor(ws, 4, '=SUMIFS(\'COMPRAS PRODUTOS\'!K:K,\'COMPRAS PRODUTOS\'!I:I,"SIM")', linha=4)
+            CelulaValor(ws, 4, '=SUMIFS(\'COMPRAS PRODUTOS\'!L:L,\'COMPRAS PRODUTOS\'!I:I,"NÃO")', linha=3)
+            CelulaValor(ws, 4, '=SUMIFS(\'COMPRAS PRODUTOS\'!L:L,\'COMPRAS PRODUTOS\'!I:I,"SIM")', linha=4)
             CelulaValor(ws, 4, '=D3+D4', linha=5)
 
             #DESCONTOS
-            CelulaValor(ws, 5, '=SUMIFS(\'COMPRAS PRODUTOS\'!L:L,\'COMPRAS PRODUTOS\'!I:I,"NÃO")', linha=3)
-            CelulaValor(ws, 5, '=SUMIFS(\'COMPRAS PRODUTOS\'!L:L,\'COMPRAS PRODUTOS\'!I:I,"SIM")', linha=4)
+            CelulaValor(ws, 5, '=SUMIFS(\'COMPRAS PRODUTOS\'!M:M,\'COMPRAS PRODUTOS\'!I:I,"NÃO")', linha=3)
+            CelulaValor(ws, 5, '=SUMIFS(\'COMPRAS PRODUTOS\'!M:M,\'COMPRAS PRODUTOS\'!I:I,"SIM")', linha=4)
             CelulaValor(ws, 5, '=E3+E4', linha=5)
 
         wb.save(caminho_final)
@@ -94,7 +94,6 @@ class Check:
         CelulaValor(ws, 1, "CANCELADAS", linha=9)
         CelulaValor(ws, 2, "SEFAZ", linha=9)
         CelulaValor(ws, 3, "ALTERDATA", linha=9)
-        
 
         if modo.strip().lower() == "check":
             CelulaValor(ws, 4, "PRODUTOS", linha=9)
@@ -119,12 +118,12 @@ class Check:
             CelulaValor(ws, 3, '=C10+C11', linha=12)
 
         if "VENDAS PRODUTOS" in abas_existentes:
-            CelulaValor(ws, 4, '=SUMIFS(\'VENDAS PRODUTOS\'!K:K,\'VENDAS PRODUTOS\'!I:I,"NÃO")', linha=10)
-            CelulaValor(ws, 4, '=SUMIFS(\'VENDAS PRODUTOS\'!K:K,\'VENDAS PRODUTOS\'!I:I,"SIM")', linha=11)
+            CelulaValor(ws, 4, '=SUMIFS(\'VENDAS PRODUTOS\'!L:L,\'VENDAS PRODUTOS\'!I:I,"NÃO")', linha=10)
+            CelulaValor(ws, 4, '=SUMIFS(\'VENDAS PRODUTOS\'!L:L,\'VENDAS PRODUTOS\'!I:I,"SIM")', linha=11)
             CelulaValor(ws, 4, '=D10+D11', linha=12)
 
-            CelulaValor(ws, 5, '=SUMIFS(\'VENDAS PRODUTOS\'!L:L,\'VENDAS PRODUTOS\'!I:I,"NÃO")', linha=10)
-            CelulaValor(ws, 5, '=SUMIFS(\'VENDAS PRODUTOS\'!L:L,\'VENDAS PRODUTOS\'!I:I,"SIM")', linha=11)
+            CelulaValor(ws, 5, '=SUMIFS(\'VENDAS PRODUTOS\'!M:M,\'VENDAS PRODUTOS\'!I:I,"NÃO")', linha=10)
+            CelulaValor(ws, 5, '=SUMIFS(\'VENDAS PRODUTOS\'!M:M,\'VENDAS PRODUTOS\'!I:I,"SIM")', linha=11)
             CelulaValor(ws, 5, '=E10+E11', linha=12)
 
         wb.save(caminho_final)
