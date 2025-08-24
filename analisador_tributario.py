@@ -36,10 +36,12 @@ ws_vendas_produtos = wb["VENDAS PRODUTOS"]
 #Criando uma nova tabela
 if letra_cabecalho("TIPO CFOP", ws_compras_produtos) == None:
     ws_compras_produtos[get_column_letter(ws_compras_produtos.max_column + 1) + "1"] = "TIPO CFOP"
+    ws_compras_produtos[get_column_letter(ws_compras_produtos.max_column + 1) + "1"] = "TIPO CLASSIFICAÇÃO"
 
 #Criando uma nova tabela
 if letra_cabecalho("TIPO CFOP", ws_vendas_produtos) == None:
     ws_vendas_produtos[get_column_letter(ws_vendas_produtos.max_column + 1) + "1"] = "TIPO CFOP"
+    ws_vendas_produtos[get_column_letter(ws_vendas_produtos.max_column + 1) + "1"] = "TIPO CLASSIFICAÇÃO"
 
 #Pegando a letra da coluna
 coluna_compras_cfop = letra_cabecalho("CFOP", ws_compras_produtos)
@@ -195,6 +197,37 @@ df_produtos.loc[df_produtos['CONFIANCA'] < limiar, 'CLASSIFICAÇÃO'] = 'Não Cl
 mask_nc = df_produtos['CLASSIFICAÇÃO'] == 'Não Classificado'
 produtos_nc = df_produtos.loc[mask_nc, 'PRODUTOS'].astype(str).tolist()
 
+X_test_vec = vectorizer.transform(df_compras_produtos['Nome Produto'].astype(str))
+probas = model.predict_proba(X_test_vec)
+max_probas = probas.max(axis=1)
+
+#Garantindo uma qualidade sobre a decisão
+limiar = 0.6
+df_compras_produtos['TIPO CLASSIFICAÇÃO'] = model.predict(X_test_vec)
+df_compras_produtos['CONFIANCA'] = max_probas
+df_compras_produtos.loc[df_compras_produtos['CONFIANCA'] < limiar, 'TIPO CLASSIFICAÇÃO'] = 'Não Classificado'
+df_compras_produtos.loc[df_compras_produtos['CFOP'].astype(str) == 1556, 'CLASSIFICAÇÃO'] = 'USO E CONSUMO'
+
+# Tratar CFOP — converte para numérico com segurança e aplica override
+mask_cfop = pd.to_numeric(df_compras_produtos['CFOP'], errors='coerce') == 1556
+df_compras_produtos.loc[mask_cfop, 'TIPO CLASSIFICAÇÃO'] = 'USO E CONSUMO'
+df_compras_produtos.loc[mask_cfop, 'CONFIANCA'] = 1.0
+
+X_test_vec = vectorizer.transform(df_vendas_produtos['Nome Produto'].astype(str))
+probas = model.predict_proba(X_test_vec)
+max_probas = probas.max(axis=1)
+
+#Garantindo uma qualidade sobre a decisão
+limiar = 0.6
+df_vendas_produtos['TIPO CLASSIFICAÇÃO'] = model.predict(X_test_vec)
+df_vendas_produtos['CONFIANCA'] = max_probas
+df_vendas_produtos.loc[df_vendas_produtos['CONFIANCA'] < limiar, 'TIPO CLASSIFICAÇÃO'] = 'Não Classificado'
+
+#Tratar CFOP — converte para numérico com segurança e aplica override
+mask_cfop = pd.to_numeric(df_vendas_produtos['CFOP'], errors='coerce') == 1556
+df_vendas_produtos.loc[mask_cfop, 'TIPO CLASSIFICAÇÃO'] = 'USO E CONSUMO'
+df_vendas_produtos.loc[mask_cfop, 'CONFIANCA'] = 1.0
+
 #Prepara lista de CFOPs não classificados com segurança
 cfops_nc = []
 if isinstance(nao_encontrados, type(None)) or nao_encontrados.empty:
@@ -247,6 +280,7 @@ col_idx = {name: i+1 for i, name in enumerate(headers)}
 for i, row in df_compras_produtos.iterrows():
     excel_row = i + 2
     ws_compras_produtos.cell(row=excel_row, column=col_idx["TIPO CFOP"], value=row["TIPO CFOP"])
+    ws_compras_produtos.cell(row=excel_row, column=col_idx["TIPO CLASSIFICAÇÃO"], value=row["TIPO CLASSIFICAÇÃO"])
 
 #VENDAS PRODUTOS
 headers = [cell.value for cell in ws_vendas_produtos[1]]
@@ -255,6 +289,7 @@ col_idx = {name: i+1 for i, name in enumerate(headers)}
 for i, row in df_vendas_produtos.iterrows():
     excel_row = i + 2
     ws_vendas_produtos.cell(row=excel_row, column=col_idx["TIPO CFOP"], value=row["TIPO CFOP"])
+    ws_vendas_produtos.cell(row=excel_row, column=col_idx["TIPO CLASSIFICAÇÃO"], value=row["TIPO CLASSIFICAÇÃO"])
 
 # Salva sem reescrever as outras abas (fórmulas preservadas)
 wb.save("TESTE.xlsx")
